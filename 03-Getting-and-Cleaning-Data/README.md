@@ -31,6 +31,7 @@ This folder contains the following files:
 - [CodeBook.md](CodeBook.md) : Usefull information about the program (struture, ...) and the final feature sets
 - [run_analysis.R](run_analysis.R) : The source code fully commented
 - [original_features_info.txt](original_features_info.txt) : the copy the the original data sets feature list
+- [project_dataset_step5.txt](project_dataset_step5.txt) : the saved version of the last dataset
 
 ### R version and Library
 
