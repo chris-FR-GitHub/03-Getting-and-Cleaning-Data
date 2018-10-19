@@ -1,78 +1,139 @@
-## Features
+## Original project data sets
 
-This following table contains the features of the final project data set. The last column contains the name of the original feature.
+````
+==================================================================
+Human Activity Recognition Using Smartphones Dataset
+Version 1.0
+==================================================================
+Jorge L. Reyes-Ortiz, Davide Anguita, Alessandro Ghio, Luca Oneto.
+Smartlab - Non Linear Complex Systems Laboratory
+DITEN - Università degli Studi di Genova.
+Via Opera Pia 11A, I-16145, Genoa, Italy.
+activityrecognition@smartlab.ws
+www.smartlab.ws
+==================================================================
+````
+
+
+The experiments have been carried out with a group of 30 volunteers within an age bracket of 19-48 years. Each person performed six activities (WALKING, WALKING_UPSTAIRS, WALKING_DOWNSTAIRS, SITTING, STANDING, LAYING) wearing a smartphone (Samsung Galaxy S II) on the waist. Using its embedded accelerometer and gyroscope, we captured 3-axial linear acceleration and 3-axial angular velocity at a constant rate of 50Hz. The experiments have been video-recorded to label the data manually. The obtained dataset has been randomly partitioned into two sets, where 70% of the volunteers was selected for generating the training data and 30% the test data. 
+
+The sensor signals (accelerometer and gyroscope) were pre-processed by applying noise filters and then sampled in fixed-width sliding windows of 2.56 sec and 50% overlap (128 readings/window). The sensor acceleration signal, which has gravitational and body motion components, was separated using a Butterworth low-pass filter into body acceleration and gravity. The gravitational force is assumed to have only low frequency components, therefore a filter with 0.3 Hz cutoff frequency was used. From each window, a vector of features was obtained by calculating variables from the time and frequency domain. See 'features_info.txt' for more details. 
+
+For each record it is provided:
+- Triaxial acceleration from the accelerometer (total acceleration) and the estimated body acceleration.
+- Triaxial Angular velocity from the gyroscope. 
+- A 561-feature vector with time and frequency domain variables. 
+- Its activity label. 
+- An identifier of the subject who carried out the experiment.
+
+
+## Original publication & License
+
+>Davide Anguita, Alessandro Ghio, Luca Oneto, Xavier Parra and Jorge L. Reyes-Ortiz. 
+>Human Activity Recognition on Smartphones using a Multiclass Hardware-Friendly Support Vector Machine. 
+>International Workshop of Ambient Assisted Living (IWAAL 2012). Vitoria-Gasteiz, Spain. Dec 2012
+>
+>This dataset is distributed AS-IS and no responsibility implied or explicit can be addressed to the authors or their institutions for its use or misuse. Any commercial use is prohibited.
+>
+>Jorge L. Reyes-Ortiz, Alessandro Ghio, Luca Oneto, Davide Anguita. November 2012.
+
+## Project steps
+
+All the steps are detailed in the code.
+
+The main run_analysis.R steps are :
+
+- Merges the training and the test sets to create one data set.
+  - For the Train and Test files:
+    - Read the subject_xxx.txt / X_xxx.txt / Y_xxx.txt files
+    - Merged them by column
+    - Appended the result to the main data set
+- Extracts only the measurements on the mean and standard deviation for each measurement.
+  - Only the original features containing -std() or -mean() were kept
+- Uses descriptive activity names to name the activities in the data set
+  - Activity Ids were replaced by their associated label (found in the activities.txt file)
+- Appropriately labels the data set with descriptive variable names.
+  - Replaced the t/f first letter by time or fft
+  - Replaced the X/Y/Z axis by For(X/Y/Z)Axis
+  - Replaced -std() and -mean() by MeanValue and StandardDeviation
+- From the data set in step 4, creates a second, independent tidy data set with the average of each variable for each activity and each subject.
+
+## Project final data set features
+
+This following table contains the features of the final project data set (step 5). The last column contains the name of the original ones.
+
+Only the mean and standard deviation features were kept for the project assignment.
 
 The original features can be found in the project package or in the [original_features_info.txt](original_features_info.txt) file
 
 
-| num | Column Name | domain | sensor | computation | axis | initial feature name |
-| --- | --- | --- | --- | --- | --- | --- |
-| 1 | activity |  |  |  |  |  |
-| 2 | subject |  |  |  |  |  |
-| 3 | timeBodyAccMeanValueForXaxis | time | BodyAcc | MeanValue | ForXaxis | tBodyAcc-mean()-X |
-| 4 | timeBodyAccMeanValueForYaxis | time | BodyAcc | MeanValue | ForYaxis | tBodyAcc-mean()-Y |
-| 5 | timeBodyAccMeanValueForZaxis | time | BodyAcc | MeanValue | ForZaxis | tBodyAcc-mean()-Z |
-| 6 | timeBodyAccStandardDeviationForXaxis | time | BodyAcc | StandardDeviation | ForXaxis | tBodyAcc-std()-X |
-| 7 | timeBodyAccStandardDeviationForYaxis | time | BodyAcc | StandardDeviation | ForYaxis | tBodyAcc-std()-Y |
-| 8 | timeBodyAccStandardDeviationForZaxis | time | BodyAcc | StandardDeviation | ForZaxis | tBodyAcc-std()-Z |
-| 9 | timeGravityAccMeanValueForXaxis | time | GravityAcc | MeanValue | ForXaxis | tGravityAcc-mean()-X |
-| 10 | timeGravityAccMeanValueForYaxis | time | GravityAcc | MeanValue | ForYaxis | tGravityAcc-mean()-Y |
-| 11 | timeGravityAccMeanValueForZaxis | time | GravityAcc | MeanValue | ForZaxis | tGravityAcc-mean()-Z |
-| 12 | timeGravityAccStandardDeviationForXaxis | time | GravityAcc | StandardDeviation | ForXaxis | tGravityAcc-std()-X |
-| 13 | timeGravityAccStandardDeviationForYaxis | time | GravityAcc | StandardDeviation | ForYaxis | tGravityAcc-std()-Y |
-| 14 | timeGravityAccStandardDeviationForZaxis | time | GravityAcc | StandardDeviation | ForZaxis | tGravityAcc-std()-Z |
-| 15 | timeBodyAccJerkMeanValueForXaxis | time | BodyAccJerk | MeanValue | ForXaxis | tBodyAccJerk-mean()-X |
-| 16 | timeBodyAccJerkMeanValueForYaxis | time | BodyAccJerk | MeanValue | ForYaxis | tBodyAccJerk-mean()-Y |
-| 17 | timeBodyAccJerkMeanValueForZaxis | time | BodyAccJerk | MeanValue | ForZaxis | tBodyAccJerk-mean()-Z |
-| 18 | timeBodyAccJerkStandardDeviationForXaxis | time | BodyAccJerk | StandardDeviation | ForXaxis | tBodyAccJerk-std()-X |
-| 19 | timeBodyAccJerkStandardDeviationForYaxis | time | BodyAccJerk | StandardDeviation | ForYaxis | tBodyAccJerk-std()-Y |
-| 20 | timeBodyAccJerkStandardDeviationForZaxis | time | BodyAccJerk | StandardDeviation | ForZaxis | tBodyAccJerk-std()-Z |
-| 21 | timeBodyGyroMeanValueForXaxis | time | BodyGyro | MeanValue | ForXaxis | tBodyGyro-mean()-X |
-| 22 | timeBodyGyroMeanValueForYaxis | time | BodyGyro | MeanValue | ForYaxis | tBodyGyro-mean()-Y |
-| 23 | timeBodyGyroMeanValueForZaxis | time | BodyGyro | MeanValue | ForZaxis | tBodyGyro-mean()-Z |
-| 24 | timeBodyGyroStandardDeviationForXaxis | time | BodyGyro | StandardDeviation | ForXaxis | tBodyGyro-std()-X |
-| 25 | timeBodyGyroStandardDeviationForYaxis | time | BodyGyro | StandardDeviation | ForYaxis | tBodyGyro-std()-Y |
-| 26 | timeBodyGyroStandardDeviationForZaxis | time | BodyGyro | StandardDeviation | ForZaxis | tBodyGyro-std()-Z |
-| 27 | timeBodyGyroJerkMeanValueForXaxis | time | BodyGyroJerk | MeanValue | ForXaxis | tBodyGyroJerk-mean()-X |
-| 28 | timeBodyGyroJerkMeanValueForYaxis | time | BodyGyroJerk | MeanValue | ForYaxis | tBodyGyroJerk-mean()-Y |
-| 29 | timeBodyGyroJerkMeanValueForZaxis | time | BodyGyroJerk | MeanValue | ForZaxis | tBodyGyroJerk-mean()-Z |
-| 30 | timeBodyGyroJerkStandardDeviationForXaxis | time | BodyGyroJerk | StandardDeviation | ForXaxis | tBodyGyroJerk-std()-X |
-| 31 | timeBodyGyroJerkStandardDeviationForYaxis | time | BodyGyroJerk | StandardDeviation | ForYaxis | tBodyGyroJerk-std()-Y |
-| 32 | timeBodyGyroJerkStandardDeviationForZaxis | time | BodyGyroJerk | StandardDeviation | ForZaxis | tBodyGyroJerk-std()-Z |
-| 33 | timeBodyAccMagMeanValue | time | BodyAccMag | MeanValue |  | tBodyAccMag-mean() |
-| 34 | timeBodyAccMagStandardDeviation | time | BodyAccMag | StandardDeviation |  | tBodyAccMag-std() |
-| 35 | timeGravityAccMagMeanValue | time | GravityAccMag | MeanValue |  | tGravityAccMag-mean() |
-| 36 | timeGravityAccMagStandardDeviation | time | GravityAccMag | StandardDeviation |  | tGravityAccMag-std() |
-| 37 | timeBodyAccJerkMagMeanValue | time | BodyAccJerkMag | MeanValue |  | tBodyAccJerkMag-mean() |
-| 38 | timeBodyAccJerkMagStandardDeviation | time | BodyAccJerkMag | StandardDeviation |  | tBodyAccJerkMag-std() |
-| 39 | timeBodyGyroMagMeanValue | time | BodyGyroMag | MeanValue |  | tBodyGyroMag-mean() |
-| 40 | timeBodyGyroMagStandardDeviation | time | BodyGyroMag | StandardDeviation |  | tBodyGyroMag-std() |
-| 41 | timeBodyGyroJerkMagMeanValue | time | BodyGyroJerkMag | MeanValue |  | tBodyGyroJerkMag-mean() |
-| 42 | timeBodyGyroJerkMagStandardDeviation | time | BodyGyroJerkMag | StandardDeviation |  | tBodyGyroJerkMag-std() |
-| 43 | fftBodyAccMeanValueForXaxis | fft | BodyAcc | MeanValue | ForXaxis | fBodyAcc-mean()-X |
-| 44 | fftBodyAccMeanValueForYaxis | fft | BodyAcc | MeanValue | ForYaxis | fBodyAcc-mean()-Y |
-| 45 | fftBodyAccMeanValueForZaxis | fft | BodyAcc | MeanValue | ForZaxis | fBodyAcc-mean()-Z |
-| 46 | fftBodyAccStandardDeviationForXaxis | fft | BodyAcc | StandardDeviation | ForXaxis | fBodyAcc-std()-X |
-| 47 | fftBodyAccStandardDeviationForYaxis | fft | BodyAcc | StandardDeviation | ForYaxis | fBodyAcc-std()-Y |
-| 48 | fftBodyAccStandardDeviationForZaxis | fft | BodyAcc | StandardDeviation | ForZaxis | fBodyAcc-std()-Z |
-| 49 | fftBodyAccJerkMeanValueForXaxis | fft | BodyAccJerk | MeanValue | ForXaxis | fBodyAccJerk-mean()-X |
-| 50 | fftBodyAccJerkMeanValueForYaxis | fft | BodyAccJerk | MeanValue | ForYaxis | fBodyAccJerk-mean()-Y |
-| 51 | fftBodyAccJerkMeanValueForZaxis | fft | BodyAccJerk | MeanValue | ForZaxis | fBodyAccJerk-mean()-Z |
-| 52 | fftBodyAccJerkStandardDeviationForXaxis | fft | BodyAccJerk | StandardDeviation | ForXaxis | fBodyAccJerk-std()-X |
-| 53 | fftBodyAccJerkStandardDeviationForYaxis | fft | BodyAccJerk | StandardDeviation | ForYaxis | fBodyAccJerk-std()-Y |
-| 54 | fftBodyAccJerkStandardDeviationForZaxis | fft | BodyAccJerk | StandardDeviation | ForZaxis | fBodyAccJerk-std()-Z |
-| 55 | fftBodyGyroMeanValueForXaxis | fft | BodyGyro | MeanValue | ForXaxis | fBodyGyro-mean()-X |
-| 56 | fftBodyGyroMeanValueForYaxis | fft | BodyGyro | MeanValue | ForYaxis | fBodyGyro-mean()-Y |
-| 57 | fftBodyGyroMeanValueForZaxis | fft | BodyGyro | MeanValue | ForZaxis | fBodyGyro-mean()-Z |
-| 58 | fftBodyGyroStandardDeviationForXaxis | fft | BodyGyro | StandardDeviation | ForXaxis | fBodyGyro-std()-X |
-| 59 | fftBodyGyroStandardDeviationForYaxis | fft | BodyGyro | StandardDeviation | ForYaxis | fBodyGyro-std()-Y |
-| 60 | fftBodyGyroStandardDeviationForZaxis | fft | BodyGyro | StandardDeviation | ForZaxis | fBodyGyro-std()-Z |
-| 61 | fftBodyAccMagMeanValue | fft | BodyAccMag | MeanValue |  | fBodyAccMag-mean() |
-| 62 | fftBodyAccMagStandardDeviation | fft | BodyAccMag | StandardDeviation |  | fBodyAccMag-std() |
-| 63 | fftBodyBodyAccJerkMagMeanValue | fft | BodyBodyAccJerkMag | MeanValue |  | fBodyBodyAccJerkMag-mean() |
-| 64 | fftBodyBodyAccJerkMagStandardDeviation | fft | BodyBodyAccJerkMag | StandardDeviation |  | fBodyBodyAccJerkMag-std() |
-| 65 | fftBodyBodyGyroMagMeanValue | fft | BodyBodyGyroMag | MeanValue |  | fBodyBodyGyroMag-mean() |
-| 66 | fftBodyBodyGyroMagStandardDeviation | fft | BodyBodyGyroMag | StandardDeviation |  | fBodyBodyGyroMag-std() |
-| 67 | fftBodyBodyGyroJerkMagMeanValue | fft | BodyBodyGyroJerkMag | MeanValue |  | fBodyBodyGyroJerkMag-mean() |
-| 68 | fftBodyBodyGyroJerkMagStandardDeviation | fft | BodyBodyGyroJerkMag | StandardDeviation |  | fBodyBodyGyroJerkMag-std() |
-
+| Column Name | Sensor | Initial feature name |
+| --- | --- | --- |
+| activity |  |  |
+| subject |  |  |
+| timeBodyAccMeanValueForXaxis | BodyAcc | tBodyAcc-mean()-X |
+| timeBodyAccMeanValueForYaxis | BodyAcc | tBodyAcc-mean()-Y |
+| timeBodyAccMeanValueForZaxis | BodyAcc | tBodyAcc-mean()-Z |
+| timeBodyAccStandardDeviationForXaxis | BodyAcc | tBodyAcc-std()-X |
+| timeBodyAccStandardDeviationForYaxis | BodyAcc | tBodyAcc-std()-Y |
+| timeBodyAccStandardDeviationForZaxis | BodyAcc | tBodyAcc-std()-Z |
+| timeGravityAccMeanValueForXaxis | GravityAcc | tGravityAcc-mean()-X |
+| timeGravityAccMeanValueForYaxis | GravityAcc | tGravityAcc-mean()-Y |
+| timeGravityAccMeanValueForZaxis | GravityAcc | tGravityAcc-mean()-Z |
+| timeGravityAccStandardDeviationForXaxis | GravityAcc | tGravityAcc-std()-X |
+| timeGravityAccStandardDeviationForYaxis | GravityAcc | tGravityAcc-std()-Y |
+| timeGravityAccStandardDeviationForZaxis | GravityAcc | tGravityAcc-std()-Z |
+| timeBodyAccJerkMeanValueForXaxis | BodyAccJerk | tBodyAccJerk-mean()-X |
+| timeBodyAccJerkMeanValueForYaxis | BodyAccJerk | tBodyAccJerk-mean()-Y |
+| timeBodyAccJerkMeanValueForZaxis | BodyAccJerk | tBodyAccJerk-mean()-Z |
+| timeBodyAccJerkStandardDeviationForXaxis | BodyAccJerk | tBodyAccJerk-std()-X |
+| timeBodyAccJerkStandardDeviationForYaxis | BodyAccJerk | tBodyAccJerk-std()-Y |
+| timeBodyAccJerkStandardDeviationForZaxis | BodyAccJerk | tBodyAccJerk-std()-Z |
+| timeBodyGyroMeanValueForXaxis | BodyGyro | tBodyGyro-mean()-X |
+| timeBodyGyroMeanValueForYaxis | BodyGyro | tBodyGyro-mean()-Y |
+| timeBodyGyroMeanValueForZaxis | BodyGyro | tBodyGyro-mean()-Z |
+| timeBodyGyroStandardDeviationForXaxis | BodyGyro | tBodyGyro-std()-X |
+| timeBodyGyroStandardDeviationForYaxis | BodyGyro | tBodyGyro-std()-Y |
+| timeBodyGyroStandardDeviationForZaxis | BodyGyro | tBodyGyro-std()-Z |
+| timeBodyGyroJerkMeanValueForXaxis | BodyGyroJerk | tBodyGyroJerk-mean()-X |
+| timeBodyGyroJerkMeanValueForYaxis | BodyGyroJerk | tBodyGyroJerk-mean()-Y |
+| timeBodyGyroJerkMeanValueForZaxis | BodyGyroJerk | tBodyGyroJerk-mean()-Z |
+| timeBodyGyroJerkStandardDeviationForXaxis | BodyGyroJerk | tBodyGyroJerk-std()-X |
+| timeBodyGyroJerkStandardDeviationForYaxis | BodyGyroJerk | tBodyGyroJerk-std()-Y |
+| timeBodyGyroJerkStandardDeviationForZaxis | BodyGyroJerk | tBodyGyroJerk-std()-Z |
+| timeBodyAccMagMeanValue | BodyAccMag | tBodyAccMag-mean() |
+| timeBodyAccMagStandardDeviation | BodyAccMag | tBodyAccMag-std() |
+| timeGravityAccMagMeanValue | GravityAccMag | tGravityAccMag-mean() |
+| timeGravityAccMagStandardDeviation | GravityAccMag | tGravityAccMag-std() |
+| timeBodyAccJerkMagMeanValue | BodyAccJerkMag | tBodyAccJerkMag-mean() |
+| timeBodyAccJerkMagStandardDeviation | BodyAccJerkMag | tBodyAccJerkMag-std() |
+| timeBodyGyroMagMeanValue | BodyGyroMag | tBodyGyroMag-mean() |
+| timeBodyGyroMagStandardDeviation | BodyGyroMag | tBodyGyroMag-std() |
+| timeBodyGyroJerkMagMeanValue | BodyGyroJerkMag | tBodyGyroJerkMag-mean() |
+| timeBodyGyroJerkMagStandardDeviation | BodyGyroJerkMag | tBodyGyroJerkMag-std() |
+| fftBodyAccMeanValueForXaxis | BodyAcc | fBodyAcc-mean()-X |
+| fftBodyAccMeanValueForYaxis | BodyAcc | fBodyAcc-mean()-Y |
+| fftBodyAccMeanValueForZaxis | BodyAcc | fBodyAcc-mean()-Z |
+| fftBodyAccStandardDeviationForXaxis | BodyAcc | fBodyAcc-std()-X |
+| fftBodyAccStandardDeviationForYaxis | BodyAcc | fBodyAcc-std()-Y |
+| fftBodyAccStandardDeviationForZaxis | BodyAcc | fBodyAcc-std()-Z |
+| fftBodyAccJerkMeanValueForXaxis | BodyAccJerk | fBodyAccJerk-mean()-X |
+| fftBodyAccJerkMeanValueForYaxis | BodyAccJerk | fBodyAccJerk-mean()-Y |
+| fftBodyAccJerkMeanValueForZaxis | BodyAccJerk | fBodyAccJerk-mean()-Z |
+| fftBodyAccJerkStandardDeviationForXaxis | BodyAccJerk | fBodyAccJerk-std()-X |
+| fftBodyAccJerkStandardDeviationForYaxis | BodyAccJerk | fBodyAccJerk-std()-Y |
+| fftBodyAccJerkStandardDeviationForZaxis | BodyAccJerk | fBodyAccJerk-std()-Z |
+| fftBodyGyroMeanValueForXaxis | BodyGyro | fBodyGyro-mean()-X |
+| fftBodyGyroMeanValueForYaxis | BodyGyro | fBodyGyro-mean()-Y |
+| fftBodyGyroMeanValueForZaxis | BodyGyro | fBodyGyro-mean()-Z |
+| fftBodyGyroStandardDeviationForXaxis | BodyGyro | fBodyGyro-std()-X |
+| fftBodyGyroStandardDeviationForYaxis | BodyGyro | fBodyGyro-std()-Y |
+| fftBodyGyroStandardDeviationForZaxis | BodyGyro | fBodyGyro-std()-Z |
+| fftBodyAccMagMeanValue | BodyAccMag | fBodyAccMag-mean() |
+| fftBodyAccMagStandardDeviation | BodyAccMag | fBodyAccMag-std() |
+| fftBodyBodyAccJerkMagMeanValue | BodyBodyAccJerkMag | fBodyBodyAccJerkMag-mean() |
+| fftBodyBodyAccJerkMagStandardDeviation | BodyBodyAccJerkMag | fBodyBodyAccJerkMag-std() |
+| fftBodyBodyGyroMagMeanValue | BodyBodyGyroMag | fBodyBodyGyroMag-mean() |
+| fftBodyBodyGyroMagStandardDeviation | BodyBodyGyroMag | fBodyBodyGyroMag-std() |
+| fftBodyBodyGyroJerkMagMeanValue | BodyBodyGyroJerkMag | fBodyBodyGyroJerkMag-mean() |
+| fftBodyBodyGyroJerkMagStandardDeviation | BodyBodyGyroJerkMag | fBodyBodyGyroJerkMag-std() |
