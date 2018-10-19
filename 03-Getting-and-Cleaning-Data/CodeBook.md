@@ -1,8 +1,74 @@
 # Project Code Book
 
 ## R version and libraries
+The script was developed with RStudio Version 1.1.456.
+
+I used `R version 3.4.4` and the following libraries.
+
+```r
+# Load the packages
+library(dplyr, warn.conflicts = FALSE)
+library(readr)   # for read_table > tibble
+library(tidyr)   # for separate
+library(stringr)  # consolde tests only, not used
+```
+
+Here is the full list of loaded package (sorted by name) and their versions:
+
+| Package | Version |
+| --- | :---: |
+| assertthat | 0.2.0 |
+| assertthat | 0.2.0 | 
+| base | 3.4.4 | 
+| bindr | 0.1.1 | 
+| bindrcpp | 0.2.2 | 
+| compiler | 3.4.4 | 
+| crayon | 1.3.4 | 
+| datasets | 3.4.4 | 
+| dplyr | 0.7.6 | 
+| glue | 1.3.0 | 
+| graphics | 3.4.4 | 
+| grDevices | 3.4.4 | 
+| hms | 0.4.2 | 
+| magrittr | 1.5 | 
+| methods | 3.4.4 | 
+| pillar | 1.3.0 | 
+| pkgconfig | 2.0.2 | 
+| purrr | 0.2.5 | 
+| R6 | 2.3.0 | 
+| Rcpp | 0.12.19 | 
+| readr | 1.1.1 | 
+| rlang | 0.2.2 | 
+| rstudioapi | 0.8 | 
+| stats | 3.4.4 | 
+| stringi | 1.2.4 | 
+| stringr | 1.3.1 | 
+| tibble | 1.4.2 | 
+| tidyr | 0.8.1 | 
+| tidyselect | 0.2.5 | 
+| tools | 3.4.4 | 
+| utils | 3.4.4 | 
+| yaml | 2.2.0 | 
+
 
 ## Folder structure
+
+:warning: If you are running the script in R Studio, the script will try to change the `current path` to the `script path`. Otherwise it will use the current path.
+
+The script will create 3 sub folders in the current folder:
+- data**zip** : contains the original datasets ZIP file
+- data : contains the original extracted files
+- data**rds** : contains dataset saved objects (.RDS)
+
+## Original data download
+
+The script downloads the original project data sets :
+    https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip'
+and save it as `projectfiles.zip` in the datazip folder.
+If the `projectfiles.zip` file already exists, the script will **not** reload it.
+
+In all the cases, the script unzips its content in the `data` folder.
+
 
 ## Project steps
 
@@ -24,6 +90,22 @@ The main run_analysis.R steps are :
   - Replaced the X/Y/Z axis by For(X/Y/Z)Axis
   - Replaced -std() and -mean() by MeanValue and StandardDeviation
 - From the data set in step 4, creates a second, independent tidy data set with the average of each variable for each activity and each subject.
+
+## Save the final data set
+
+The last dataset was saved using the following command:
+```r
+write.table(avgdata, 
+            'project_dataset_step5.txt',
+            row.names = FALSE)
+```
+
+To reload it:
+
+```r
+myobj <- read.table('project_dataset_step5.txt',
+                    header=TRUE)
+```
 
 ## Project final data set features
 
