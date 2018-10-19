@@ -35,7 +35,11 @@ This folder contains the following files:
 ### R version and Library
 
 ```r
-library(dplyr)
+# "R version 3.4.4"
+library(dplyr, warn.conflicts = FALSE)
+library(readr)   # for read_table > tibble
+library(tidyr)   # for separate
+library(stringr)
 ```
 
 The exact version of all the loaded libraries is included in the CodeBook file. 
