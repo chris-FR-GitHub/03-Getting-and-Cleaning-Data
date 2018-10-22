@@ -18,3 +18,11 @@ This folder contains the following files:
 - README.md (this file) : simple introduction
 - plot**X**.R : the code of each plot
 - plot**X**.png : the generated plots (png format)
+
+### Results
+
+1) Have total emissions from PM2.5 decreased in the United States from 1999 to 2008? 
+
+Using the base plotting system, make a plot showing the total PM2.5 emission from all sources for each of the years 1999, 2002, 2005, and 2008.
+
+![plot1.png](plot1.png)
