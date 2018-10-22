@@ -7,6 +7,10 @@ This repo contains the assignments of the [Johns Hopkins University - Coursera](
 
 ### Course 3: Getting and Cleaning Data
 
-- [Getting-and-Cleaning-Data final project](03-Getting-and-Cleaning-Data)
+- [Course Final project](03-Getting-and-Cleaning-Data)
+
+### Course 4: Exploratory Data Analysis
+
+- [Week 4 - Final Project](04-Exploratory-Data-Analysis-Week4-Project)
 
 
