@@ -16,13 +16,15 @@
 
 
 #===============================================================================
-#                                 plot1
+#                                 plot3
 #===============================================================================
-# Have total emissions from PM2.5 decreased in the United States from 1999 to
-# 2008?
-# Using the base plotting system, make a plot showing the total PM2.5 emission
-# from all sources for each of the years 1999, 2002, 2005, and 2008.
+# Of the four types of sources indicated by the "type" variable,
+# which of these four sources have seen decreases in emissions
+# from 1999-2008 for Baltimore City?
+# Which have seen increases in emissions from 1999-2008?
+# Use the ggplot2 plotting system to make a plot answer this question.
 #===============================================================================
+
 
 ################################################################################
 # R library
@@ -33,6 +35,8 @@
 
 # Load the packages
 library(dplyr, warn.conflicts = FALSE)
+library(ggplot2)
+library(RColorBrewer)   # to check the coloar palette from the course
 
 ################################################################################
 # Load the RDS file
@@ -45,30 +49,47 @@ source('loadplotdata.R')
 # load the data
 data <- loadplotdata()
 
+# str(data)
 
 ################################################################################
-# Summarize total emissions by year (in millions of tons)
-emissionbyyear <- data %>%
-    group_by(year) %>%
-    summarize(emissions = sum(Emissions) / 10 ^ 6)
+# Filter Baltimore data fips == "24510"
+# Summarize total emissions by year & type (in tons)
+emissionbyyeartype <- data %>%
+    filter(fips == "24510") %>%
+    group_by(year, type) %>%
+    summarize(emissions = sum(Emissions))
 
-# emissionbyyear
+
+# emissionbyyeartype
+
+
+################################################################################
+# create a blue palette for fun
+# the function comes from the source('loadplotdata.R')
+
+cblue <- loadplotcolor()
 
 ################################################################################
 # plot
 
-png('plot1.png',
+png('plot3.png',
     height = 480,
-    width = 480)
+    width = 600)
 
-barplot(
-    height = emissionbyyear$emissions,
-    names.arg = emissionbyyear$year,
-    col = 'blue',
-    main = expression('US Total ' ~ PM[2.5] ~ ' emission from 1999 to 2008'),
-    xlab = 'Year',
-    ylab = expression( ~ PM[2.5] ~ ' emissions (in millions of tons)')
-)
-# box()
+emissionbyyeartype %>%
+    ggplot(aes(x = factor(year), y = emissions, fill = factor(year))) +
+    geom_col() +
+    geom_text(aes(label = as.integer(emissions)), vjust = -0.5, size=3)+
+    # scale_fill_brewer(direction = -1) +
+    scale_fill_manual(values = cblue) +
+    facet_wrap( ~ type, ncol = 4) +
+    theme_bw() +
+    theme(axis.text.x = element_text(size = 8)) +
+    labs(
+        x = 'Year',
+        y = expression( ~ PM[2.5] ~ ' emissions (in tons)'),
+        title = 'Baltimore City - ' ~ PM[2.5] ~ ' emission by Type from 1999 to 2008'
+    ) +
+    guides(fill=FALSE)  # hide the year legend as year was used for the FILL aes
 
 dev.off()

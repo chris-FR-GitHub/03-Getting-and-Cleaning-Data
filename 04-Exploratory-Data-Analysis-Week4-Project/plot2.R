@@ -16,12 +16,11 @@
 
 
 #===============================================================================
-#                                 plot1
+#                                 plot2
 #===============================================================================
-# Have total emissions from PM2.5 decreased in the United States from 1999 to
-# 2008?
-# Using the base plotting system, make a plot showing the total PM2.5 emission
-# from all sources for each of the years 1999, 2002, 2005, and 2008.
+# Have total emissions from PM2.5 decreased in the Baltimore City, Maryland
+# (fips == "24510") from 1999 to 2008?
+# Use the base plotting system to make a plot answering this question.
 #===============================================================================
 
 ################################################################################
@@ -45,19 +44,23 @@ source('loadplotdata.R')
 # load the data
 data <- loadplotdata()
 
+# str(data)
 
 ################################################################################
-# Summarize total emissions by year (in millions of tons)
+# Filter Baltimore data fips == "24510"
+# Summarize total emissions by year (in tons) => max is 3274
 emissionbyyear <- data %>%
+    filter(fips == "24510") %>%
     group_by(year) %>%
-    summarize(emissions = sum(Emissions) / 10 ^ 6)
+    summarize(emissions = sum(Emissions))
 
+# max(emissionbyyear$emissions)
 # emissionbyyear
 
 ################################################################################
 # plot
 
-png('plot1.png',
+png('plot2.png',
     height = 480,
     width = 480)
 
@@ -65,9 +68,10 @@ barplot(
     height = emissionbyyear$emissions,
     names.arg = emissionbyyear$year,
     col = 'blue',
-    main = expression('US Total ' ~ PM[2.5] ~ ' emission from 1999 to 2008'),
+    main =
+        expression('Baltimore City - Total ' ~ PM[2.5] ~ ' emission from 1999 to 2008'),
     xlab = 'Year',
-    ylab = expression( ~ PM[2.5] ~ ' emissions (in millions of tons)')
+    ylab = expression( ~ PM[2.5] ~ ' emissions (in tons)')
 )
 # box()
 
