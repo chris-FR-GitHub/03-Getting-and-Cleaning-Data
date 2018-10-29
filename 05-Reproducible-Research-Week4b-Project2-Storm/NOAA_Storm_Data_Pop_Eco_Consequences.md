@@ -6,13 +6,13 @@ output:
 ---
 
 
-#Which severe weather events have the most impact population health and economic across the United States  
+# Which severe weather events have the most impact population health and economic across the United States  
 
 **Course:** Reproducible Research: Peer Assessment 2  
 **Author:** chris-FR-GitHub  
 **date:** 29th, october 2018  
 
-##Synopsis
+## Synopsis
 
 Storms and other severe weather events can cause both public health and economic problems for communities and municipalities. Many severe events can result in fatalities, injuries, and property damage, and preventing such outcomes to the extent possible is a key concern.  
   
@@ -24,9 +24,9 @@ From an economic point of view, FLOOD (144 billions), HURRICANE/TYPHOON (69.3 bi
 </br>
 *This is the project **#2** of the `Reproducible Research` course.*
 
-##Loading and Processing the Raw Data
+## Loading and Processing the Raw Data
 
-###Environment
+### Environment
 
 We will use the `dplyr`, `ggplot2`, `readr` libraries for this assignment.
 
@@ -76,9 +76,7 @@ Sys.getlocale("LC_TIME")
 # Sys.setlocale("LC_TIME", oldlocale)
 ```
   
-###Loading the dataset
-
-> Load the data
+### Loading the dataset
 
 We load the data using `readr` package.  
 
@@ -113,7 +111,7 @@ weather <- weather %>%
 The dataset has **902297** observations of **8** variables.  
 </br>
 
-###Only keeping data collected after 1996
+### Only keeping data collected after 1996
 
 According to NOAA the data recording start from Jan. 1950. At that time they recorded one event type, tornado. They add more events gradually and only from Jan. 1996 they started recording all events type.  
   
@@ -131,7 +129,7 @@ weather <- weather %>%
 The dataset has now **653530** observations of **38** variables.  
 </br>
 
-###Apply PROPDMGEXP and PROPDMGEXP to the values
+### Apply PROPDMGEXP and PROPDMGEXP to the values
 
 The **xxxEXP** are exponential values for the Crop and Property domages (Hundred (H), Thousand (K), Million (M) and Billion (B)).
 
@@ -180,7 +178,7 @@ weather <- weather %>%
     )
 ```
 
-###EVTYPE cleanup
+### EVTYPE cleanup
 
 Some EVTYPE are in diferent upper / lower cases.
 
@@ -294,9 +292,9 @@ We should have continue to check the other values...
 
 
 
-#Results
+# Results
 
-##Impact on population health
+## Impact on population health
 
 We will pick the top 10 events for fatalities and Injuries.
 
@@ -390,7 +388,7 @@ Since **1996**, EXCESSIVE HEAT (1797) and TORNADO (1511) cause the most fataliti
 
 
 
-##Impact on economy
+## Impact on economy
 
 We will pick the top 10 events for crop and property domages ( in **Billions** ).  
 
