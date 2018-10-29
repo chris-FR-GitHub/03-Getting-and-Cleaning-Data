@@ -13,4 +13,6 @@ This repo contains the assignments of the [Johns Hopkins University - Coursera](
 
 - [Week 4 - Final Project](04-Exploratory-Data-Analysis-Week4-Project)
 
+### Course 5: Reproducible Research
 
+- [Week 4 - Final Project - Storm Impacts](05-Reproducible-Research-Week4b-Project2-Storm)

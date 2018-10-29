@@ -1,0 +1,330 @@
+---
+output:
+  pdf_document: default
+  html_document:
+    keep_md: yes
+---
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(echo = TRUE)
+
+knitr::opts_chunk$set( fig.path = "figure/")
+
+```
+#Which severe weather events have the most impact population health and economic across the United States
+**Course:** Reproducible Research: Peer Assessment 2  
+**Author:** chris-FR-GitHub  
+**date:** 29th, october 2018  
+
+##Synopsis
+
+Storms and other severe weather events can cause both public health and economic problems for communities and municipalities. Many severe events can result in fatalities, injuries, and property damage, and preventing such outcomes to the extent possible is a key concern.  
+  
+This project involves exploring the U.S. National Oceanic and Atmospheric Administration's (NOAA) storm database. This database tracks characteristics of major storms and weather events in the United States, including when and where they occur, as well as estimates of any fatalities, injuries, and property damage. 
+
+Since **1996**, EXCESSIVE HEAT (1797) and TORNADO (1511) cause the most fatalities and TORNADO (20667) the most injuries.  
+From an economic point of view, FLOOD (144 billions), HURRICANE/TYPHOON (69.3 billions) and STORM SURGE (43.2 billions) cause the most property domages and DROUGHT (13.4 billions) the most crop domages
+</br>
+</br>
+*This is the project **#2** of the `Reproducible Research` course.*
+
+##Loading and Processing the Raw Data
+
+###Environment
+
+We will use the `dplyr`, `ggplot2`, `readr` libraries for this assignment.
+
+```{r library, cache=TRUE}
+library(dplyr, warn.conflicts = FALSE)
+library(ggplot2)
+library(readr)  # read_csv : returns a tibble
+library(lubridate, warn.conflicts = FALSE)
+library(gridExtra, warn.conflicts = FALSE)
+```
+
+The configuration is:
+
+| Name | Type |  Version |
+| :--- | :---: | :---: |
+| R |   | `r package_version(R.version)` |
+| dplyr | package | `r packageVersion('dplyr')` |
+| ggplot2 | package | `r packageVersion('ggplot2')` |
+| readr | package | `r packageVersion('readr')` |
+| lubridate | package | `r packageVersion('lubridate')` |
+| gridExtra | package | `r packageVersion('gridExtra')` |
+
+To use the same locale as the file one, change the locale to EN.
+
+
+```{r loacle, cache=TRUE}
+# we set the current locale to English
+oldlocale <- Sys.getlocale("LC_TIME")
+Sys.setlocale("LC_TIME", "English")
+
+Sys.getlocale("LC_TIME")
+
+# Sys.setlocale("LC_TIME", oldlocale)
+```
+  
+###Loading the dataset
+
+> Load the data
+
+We load the data using `readr` package.  
+
+```{r download_and_read_the_file, cache=TRUE}
+# Download the file
+folderdata <- 'data'
+if(!dir.exists(folderdata)) dir.create(folderdata)
+
+urlzip <- 'https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2'
+filedata <- file.path(folderdata, 'repdata_data_StormData.csv.bz2')
+
+
+if(!file.exists(filedata)){
+    download.file(url=urlzip, 
+                  destfile = filedata, 
+                  mode="wb", quiet = T)
+}
+
+# read the file
+weather <- read_csv(filedata,
+                    col_names = TRUE,
+                    col_types = cols(),
+                    progress=FALSE)
+
+# keep only the date, and the counters
+weather <- weather %>%
+    select('BGN_DATE', 'EVTYPE','FATALITIES','INJURIES', 
+           'PROPDMG', 'PROPDMGEXP', 'CROPDMG', 'CROPDMGEXP')
+
+```
+
+The dataset has **`r nrow(weather)`** observations of **`r ncol(weather)`** variables.  
+</br>
+
+###Only keeping data collected after 1996
+
+According to NOAA the data recording start from Jan. 1950. At that time they recorded one event type, tornado. They add more events gradually and only from Jan. 1996 they started recording all events type.  
+  
+To compare all events and not introducing a data bias, we will keep the data after **1996**.
+
+```{r after1996, cache=TRUE}
+weather$BGN_DATE <- mdy_hms(weather$BGN_DATE)
+weather$year <- year(weather$BGN_DATE)
+
+weather <- weather %>%
+    filter(year >= 1996)
+
+```
+
+The dataset has now **`r nrow(weather)`** observations of **`r ncol(weather)`** variables.  
+</br>
+
+###Apply PROPDMGEXP and PROPDMGEXP to the values
+
+The **xxxEXP** are exponential values for the Crop and Property domages (Hundred (H), Thousand (K), Million (M) and Billion (B)).
+
+```{r xxxEXP}
+table(weather$PROPDMGEXP)
+table(weather$CROPDMGEXP)
+```
+
+We apply these units.
+
+```{r PROPDMG_CROPDMG, cache=TRUE}
+weather <- weather %>% 
+    mutate(PROPDMG = PROPDMG * ifelse(PROPDMGEXP == "B", 
+                                10^9, 
+                                ifelse(PROPDMGEXP == "M", 
+                                       10^6, 
+                                       ifelse(PROPDMGEXP == "K", 
+                                              10^3, 
+                                              1
+                                       ))),
+           CROPDMG = CROPDMG * ifelse(CROPDMGEXP == "B", 
+                                      10^9, 
+                                      ifelse(CROPDMGEXP == "M", 
+                                             10^6, 
+                                             ifelse(CROPDMGEXP == "K", 
+                                                    10^3, 
+                                                    1
+                                             )))
+    )
+
+```
+
+###EVTYPE cleanup
+
+Some EVTYPE are in diferent upper / lower cases.
+
+```{r EVTYPE1, cache=TRUE}
+paste('unique EVTYPE : ', length(unique(weather$EVTYPE)))
+
+
+weather$EVTYPE <- toupper(weather$EVTYPE)
+
+paste('unique EVTYPE : ', length(unique(weather$EVTYPE)))
+
+```
+
+The file [spec](https://d396qusza40orc.cloudfront.net/repdata%2Fpeer2_doc%2Fpd01016005curr.pdf) linked to the project contains the 48 official EVENT TYPE values.  
+These values are defined in the **Storm Data Event Table**.  
+
+We stored these values in the `storm_event.csv` file to facilitate the comparison with the actual values.
+
+```{r loadeventtype, cache=TRUE}
+# read the file storm_event.csv files
+eventtype <- read_csv('storm_event.csv',
+                    col_names = TRUE,
+                    col_types = cols(),
+                    progress=FALSE)
+eventtype$EVTYPE <- toupper(eventtype$EVTYPE)
+head(eventtype)
+```
+
+We can now check the valid / invalid EVENT TYPE and the number of associated records:
+
+```{r checkeventtype1, cache=TRUE}
+table(weather$EVTYPE %in% eventtype$EVTYPE)
+```
+
+We will focus on the invalid values top 10 :
+
+```{r checkeventtype2, cache=TRUE}
+weather %>% 
+    filter( !(EVTYPE %in% eventtype$EVTYPE) )  %>% 
+    group_by(EVTYPE) %>%
+    tally() %>%
+    arrange(desc(n)) %>%
+    top_n(10, n)
+```
+
+We correct these first values (the first one has the greatest impact) :
+
+```{r modifyecventtype, cache=TRUE}
+weather$EVTYPE <- gsub('TSTM', 'THUNDERSTORM', weather$EVTYPE)
+weather$EVTYPE <- gsub('WEATHER/MIX', 'WEATHER', weather$EVTYPE, fixed=TRUE)
+weather$EVTYPE <- gsub('WIND/HAIL', 'WIND', weather$EVTYPE, fixed=TRUE)
+weather$EVTYPE <- gsub('WILD/FOREST FIRE', 'WILDFIRE', weather$EVTYPE, fixed=TRUE)
+table(weather$EVTYPE %in% eventtype$EVTYPE)
+```
+
+We should have continue to check the other values...
+
+
+
+
+#Results
+
+##Impact on population health
+
+We will pick the top 10 events for fatalities and Injuries.
+
+```{r top10healh, cache=TRUE}
+top10fatalities <- weather %>% 
+    group_by(EVTYPE) %>%
+    summarize(FATALITIES = sum(FATALITIES, na.rm=T)) %>%
+    arrange(desc(FATALITIES)) %>%
+    top_n(10, FATALITIES)
+
+top10fatalities
+
+top10injuries <- weather %>% 
+    group_by(EVTYPE) %>%
+    summarize(INJURIES = sum(INJURIES, na.rm=T)) %>%
+    arrange(desc(INJURIES)) %>%
+    top_n(10, INJURIES)
+
+top10injuries
+
+```
+
+Plot the 2 list in a single graph (2 columns).
+
+```{r plotheatlh, cache=TRUE,fig.width=10}
+# plot 1
+plotfatalities <- ggplot(top10fatalities, aes(x=reorder(EVTYPE, FATALITIES), y=FATALITIES)) +
+    geom_bar(stat='identity', col="blue", fill='blue') +
+    coord_flip() +
+    theme_bw() +
+    theme(axis.text.x = element_text(size = 8)) +
+    labs(
+        x = 'Event type',
+        y = 'Fatalities',
+        title = 'Fatalities by EventType'
+    )
+
+# plot 2
+plotinjuries <- ggplot(top10injuries, aes(x=reorder(EVTYPE, INJURIES), y=INJURIES)) +
+    geom_bar(stat='identity', col="blue", fill='blue') +
+    coord_flip() +
+    theme_bw() +
+    theme(axis.text.x = element_text(size = 8)) +
+    labs(
+        x = 'Event type',
+        y = 'Injuries',
+        title = 'Injuries by EventType'
+    )
+
+grid.arrange(plotfatalities, plotinjuries, ncol = 2)
+````
+
+Since **1996**, EXCESSIVE HEAT (1797) and TORNADO (1511) cause the most fatalities and TORNADO (20667) the most injuries.  
+
+
+
+##Impact on economy
+
+We will pick the top 10 events for crop and property domages ( in **Billions** ).  
+
+```{r top10crop, cache=TRUE}
+top10crop <- weather %>% 
+    group_by(EVTYPE) %>%
+    summarize(CROPDMG = sum(CROPDMG, na.rm=T) / 10^9) %>%
+    arrange(desc(CROPDMG)) %>%
+    top_n(10, CROPDMG)
+
+top10crop
+
+top10prop <- weather %>% 
+    group_by(EVTYPE) %>%
+    summarize(PROPDMG = sum(PROPDMG, na.rm=T) / 10^9) %>%
+    arrange(desc(PROPDMG)) %>%
+    top_n(10, PROPDMG)
+
+top10prop
+
+```
+
+Plot the 2 list in a single graph (2 columns).  
+
+```{r plotcrop, cache=TRUE,fig.width=10}
+# plot 1
+plotcrop <- ggplot(top10crop, aes(x=reorder(EVTYPE, CROPDMG), y=CROPDMG)) +
+    geom_bar(stat='identity', col="blue", fill='blue') +
+    coord_flip() +
+    theme_bw() +
+    theme(axis.text.x = element_text(size = 8)) +
+    labs(
+        x = 'Event type',
+        y = 'Crop Domage in Billion',
+        title = 'Crop Domage by EventType'
+    )
+
+# plot 2
+plotprop <- ggplot(top10prop, aes(x=reorder(EVTYPE, PROPDMG), y=PROPDMG)) +
+    geom_bar(stat='identity', col="blue", fill='blue') +
+    coord_flip() +
+    theme_bw() +
+    theme(axis.text.x = element_text(size = 8)) +
+    labs(
+        x = 'Event type',
+        y = 'Property Domage in Billion',
+        title = 'Property Domage by EventType'
+    )
+
+grid.arrange(plotcrop, plotprop, ncol = 2)
+````
+
+From an economic point of view, FLOOD (144 billions), HURRICANE/TYPHOON (69.3 billions) and STORM SURGE (43.2 billions) cause the most property domages and DROUGHT (13.4 billions) the most crop domages
