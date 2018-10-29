@@ -5,7 +5,9 @@ output:
   pdf_document: default
 ---
 
-#Which severe weather events have the most impact population health and economic across the United States
+
+#Which severe weather events have the most impact population health and economic across the United States  
+
 **Course:** Reproducible Research: Peer Assessment 2  
 **Author:** chris-FR-GitHub  
 **date:** 29th, october 2018  
@@ -20,7 +22,7 @@ Since **1996**, EXCESSIVE HEAT (1797) and TORNADO (1511) cause the most fataliti
 From an economic point of view, FLOOD (144 billions), HURRICANE/TYPHOON (69.3 billions) and STORM SURGE (43.2 billions) cause the most property domages and DROUGHT (13.4 billions) the most crop domages
 </br>
 </br>
-*This is the Peer Assignment **#2** of the `Reproducible Research` course.*
+*This is the project **#2** of the `Reproducible Research` course.*
 
 ##Loading and Processing the Raw Data
 
