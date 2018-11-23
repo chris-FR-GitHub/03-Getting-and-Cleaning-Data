@@ -16,3 +16,8 @@ This repo contains the assignments of the [Johns Hopkins University - Coursera](
 ### Course 5: Reproducible Research
 
 - [Week 4 - Final Project - Storm Impacts](05-Reproducible-Research-Week4b-Project2-Storm)
+
+### Course 6: Statistical Inference
+
+- [Week 4 - Final Project - #1 - A simulation exercise](06-Statistical-Inference)
+- [Week 4 - Final Project - #2 - Basic inferential data analysis](06-Statistical-Inference)
