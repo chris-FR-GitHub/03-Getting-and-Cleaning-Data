@@ -1,0 +1,143 @@
+---
+title: "Regression Models - Automatic vs manual transmissions"
+author: "chris-FR-GitHub"
+date: "18 Décembre 2018"
+output:
+  html_document:
+    keep_md: yes
+  pdf_document: default
+geometry: left=2cm,right=2cm,top=1cm,bottom=2cm
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set( fig.path = "figure/")
+```
+
+## Synopsis
+
+In this week project, we will explore a data set containing a collection of cars and try to determine if there is a difference between automatic and manual transmissions in term of MPG. (The code of this document is available on Github)
+
+## Data
+
+```{r constants, message=FALSE, echo = FALSE}
+library(tidyverse, warn.conflicts = TRUE)
+library(gridExtra)
+```
+
+The data used for this project is the mtcars (Motor Trend Car Road Tests) dataset. It contains **`r dim(mtcars)[1]`** cars (rows) and  **`r dim(mtcars)[2]`** columns (**`r names(mtcars)`**).  
+We will just convert AM and VS to factors.
+```{r factor, message=FALSE}
+mtcars$am <- factor(mtcars$am, levels = c(0, 1), labels = c("auto", "manual"))
+mtcars$vs <- factor(mtcars$vs)
+```
+
+## Exploratory analysis
+
+The **str** and **summary** function results are in the appendix. The repartition automatic and manual is the following:
+```{r tableam, echo=FALSE}
+cbind(count=table(mtcars$am), percentage=prop.table(table(mtcars$am))*100)
+```
+If we check the MPG value compared to the other column:  
+
+```{r quickplot, echo=FALSE, fig.align='center', fig.height=3}
+pam <- ggplot(mtcars, aes(x=am, y=mpg, fill=am)) + 
+    geom_boxplot() + 
+    theme(legend.position="none")
+
+pcyl<- ggplot(mtcars, aes(x=factor(cyl), y=mpg, fill=factor(cyl))) + 
+    geom_boxplot() + xlab('cyl') +
+    geom_jitter(aes(col=mtcars$am)) +
+    theme(legend.position="none")
+
+pdisp<- ggplot(mtcars, aes(x=disp, y=mpg, col=am)) + 
+    geom_point() + 
+    theme(legend.position="none")
+
+php<- ggplot(mtcars, aes(x=hp, y=mpg, col=am)) + 
+    geom_point() + 
+    theme(legend.position="none")
+
+pdrat <- ggplot(mtcars, aes(x=drat, y=mpg, col=am)) + 
+    geom_point() + 
+    theme(legend.position="none")
+
+pwt  <- ggplot(mtcars, aes(x=wt, y=mpg, col=am)) + 
+    geom_point() + 
+    theme(legend.position="none")
+
+pqsec  <- ggplot(mtcars, aes(x=qsec, y=mpg, col=am)) + 
+    geom_point() + 
+    theme(legend.position="none")
+
+pgear<- ggplot(mtcars, aes(x=factor(gear), y=mpg, fill=factor(gear))) + 
+    geom_boxplot() + xlab('Gear') + 
+    geom_jitter(aes(col=mtcars$am)) +
+    theme(legend.position="none")
+
+grid.arrange(pam, pcyl, pdisp, php, pdrat, pwt, pqsec, pgear, ncol=4, nrow = 2)
+```
+
+MPG is highly correlated to some features. The complete correlation plot is on appendix.
+```{r correlations, echo=FALSE}
+correlations <- cor(mtcars[,sapply(mtcars, class) == "numeric"], method="spearman")
+round(correlations[1, -1],2)
+```
+
+## MPG vs AM
+
+From the first graph, there seems to have a difference in MPG between the 2 transmissions. 
+```{r ttest}
+t<- t.test( mpg~am, data = mtcars, 
+            alternative = "two.sided", paired = FALSE, var.equal = FALSE, conf.level = 0.95)
+```
+The p-value is **`r round(t$p.value, 4)`** and the 95% interval does not contains 0, so we can say that there is a difference in MPG between these 2 transmission types. if we create a model from this feature only :
+```{r ammodel}
+fitam <- lm(mpg~am, mtcars)
+summary(fitam)$coefficient
+```
+
+Even if there is a difference between the 2 transmissions (manual having a **`r round(fitam$coefficients[2],2)`** higher MPG), this feature only is not a very good predictor : the Adjusted R-squared value is **`r round(summary(fitam)$adj.r.squared, 3)`** . Let's check if we can find a better model using the other features.
+
+## Feature selection using step
+In the feature selection video, the **step** function was indroduced. We will try to use it to find a better model and see if the transmission is part of it.I used : http://www.stat.columbia.edu/~martin/W2024/R10.pdf as a starter code.
+
+```{r step}
+fit.null<-lm(mpg~1, data=mtcars)
+fit.full<-lm(mpg~., data=mtcars)
+# trying the 3 ways
+step_fw <- step(fit.null, scope=list(lower=fit.null, upper=fit.full), direction="forward", trace=0)
+step_bc <- step(fit.full, data=mtcars, direction="backward", trace=0)
+step_bo <- step(fit.null, scope = list(upper=fit.full), data=mtcars, direction="both", trace=0)
+```
+| direction | formula | Adjusted R-squared |
+| ---- | ---- | ---- |
+| forward | `r format(as.formula(step_fw))` | `r round(summary(step_fw)$adj.r.squared, 3)` |
+| backward | `r format(as.formula(step_bc))` | `r round(summary(step_bc)$adj.r.squared, 3)` |
+| both | `r format(as.formula(step_bo))` | `r round(summary(step_bo)$adj.r.squared, 3)` |
+
+## Conclusion
+If we pick the backward step result as our final model : **`r format(as.formula(step_bc))`**, Manual transmissions have a slightly better MPG (**`r round(coef(step_bc)[4], 2)`**) than the automatic ones (in the 1974's).
+```{r final}
+summary(step_bc)$coefficient
+```
+## Appendix
+
+### Exploratory analysis
+
+```{r strandsummary}
+str(mtcars)
+summary(mtcars[, sapply(mtcars, class) == "numeric"])
+```
+
+Pair plot:
+```{r pair}
+pairs(mpg~., data=mtcars, col=mtcars$am)
+```
+Correlation plot:
+```{r corrplot, fig.height=3}
+library(corrplot)
+corrplot(correlations, method="circle")
+```
+
+
