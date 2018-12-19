@@ -21,3 +21,7 @@ This repo contains the assignments of the [Johns Hopkins University - Coursera](
 
 - [Week 4 - Final Project - #1 - A simulation exercise](06-Statistical-Inference)
 - [Week 4 - Final Project - #2 - Basic inferential data analysis](06-Statistical-Inference)
+
+### Course 7:  Regression Models
+
+- [Week 4 - Final Project - #1 - MPG difference between automatic and manual transmissions](07-Regression-Models)
