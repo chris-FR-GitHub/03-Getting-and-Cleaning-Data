@@ -28,4 +28,4 @@ This repo contains the assignments of the [Johns Hopkins University - Coursera](
 
 ### Course 8:  Practical Machine Learning
 
-- [Week 4 - Final Project - #1 - Practical Machine Learning - Exercise classification](08-Practical-Machine-Learning)
+- [Week 4 - Final Project - #1 - Practical Machine Learning - Exercise classification](08-Practical-Machine-Learning)  [html](http://htmlpreview.github.io/?https://github.com/chris-FR-GitHub/Coursera-Johns-Hopkins/blob/master/08-Practical-Machine-Learning/PracticalML-1-pml.html)
