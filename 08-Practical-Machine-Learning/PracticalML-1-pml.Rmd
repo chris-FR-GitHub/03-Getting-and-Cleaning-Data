@@ -1,0 +1,196 @@
+---
+title: "Practical Machine Learning - Exercise classification"
+author: "chris-FR-GitHub"
+date: "19 Janvier 2019"
+output:
+  html_document:
+    keep_md: yes
+  pdf_document: default
+geometry: left=2cm,right=2cm,top=1cm,bottom=2cm
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set( fig.path = "figure/")
+```
+
+## Synopsis
+
+Today, a large number of devices such as Jawbone Up, Nike FuelBand, and Fitbit it can collect large amount of data about personal activity relatively inexpensively.  
+In this project, we will try to use the data collected from accelerometers on the belt, forearm, arm, and dumbell of 6 participants to predict the manner in which they did the exercise.  
+We will test different models and pick the best one to predict the class of 20 additional records.
+
+## Data
+
+We used and copied the 2 following data files to the current directory :  
+- training data : https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv  
+- test data : https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv  
+The original data from this project comes from this source: http://groupware.les.inf.puc-rio.br/har.  
+
+```{r packages, message=FALSE, cache=TRUE}
+# Load the R libraries
+library(caret, warn.conflicts = TRUE)
+library(tidyverse, warn.conflicts = TRUE)
+```
+
+### Load the Data
+From a first file load and summary, we found that a the files contains "NA" and "#DIV/0!". We will convert these values to NAs. 
+```{r loaddata, cache=TRUE}
+# Load the CSV files
+pmlTraining <- read.csv("pml-training.csv", header=TRUE, na.strings = c("NA","","#DIV/0!"))
+pmlTesting <- read.csv("pml-testing.csv", header=TRUE, na.strings = c("NA","","#DIV/0!"))
+```
+
+The trainData dataset contains **`r dim(pmlTraining)[1]`** rows and the testData dataset contains **`r dim(pmlTesting)[1]`** rows. Each dataset contains **`r dim(pmlTraining)[2]`** columns.
+
+### Quick Exploratory analysis
+The summary function output has been set in appendix.
+```{r summary, cache=TRUE}
+# summary(pmlTraining)
+# list the levels for the classe factor
+levels(pmlTraining$classe)
+# summarize the classe column distribution
+percentage <- prop.table(table(pmlTraining$classe)) * 100
+cbind('Count'=table(pmlTraining$classe), '%'=percentage)
+```
+A lot of columns have a high number of NAs (> 98% of the values).
+```{r nas, cache=TRUE}
+table(NAs=colSums(is.na(pmlTraining)))
+```
+These NAs do not seem to be specific to an exercise class (ex : an exercise not using a specific devise). We will remove these columns from our predictors.
+```{r amplitude_roll_forearm, cache=TRUE}
+table(pmlTraining$classe, is.na(pmlTraining$amplitude_roll_forearm))
+```
+
+## Clean the data
+
+We will remove the column containings the high number of NAs, and the first 7 columns that are the experiments (user / date / ...) informations.
+```{r clean, cache=TRUE}
+iNAsColumn <- which(colSums(is.na(pmlTraining))>19000)
+pmlTrainingClean <- pmlTraining[,-iNAsColumn]
+pmlTrainingClean <- pmlTrainingClean[,-c(1:7)]
+```
+
+# Build models
+
+## Split the train dataset in training and validation datasets
+
+```{r splitdata, cache=TRUE}
+# Reproducibility
+set.seed(123)
+# pick 80% of the rows in the original dataset 
+inTrain <- createDataPartition(pmlTrainingClean$classe, p=0.80, list=FALSE)
+# 80% of the data to train the models
+training <- pmlTrainingClean[inTrain,]
+# 20% of the data for validation
+validation <- pmlTrainingClean[-inTrain,]
+
+dim(training)
+```
+
+## Test different models
+
+```{r caretclass, cache=TRUE}
+nbmodels <- length(unique(modelLookup()[modelLookup()$forClass,c(1)]))
+```
+Caret has **`r nbmodels`** classification models. We are going to test 5 models from the course.  
+
+We will use 5-fold cross validation.
+```{r trControl, cache=TRUE}
+trControl <- trainControl(method="cv", number=5)
+metric <- "Accuracy"
+```
+
+Train different models (using the same seed each time).
+
+```{r train, message=FALSE, warning=FALSE, cache=TRUE}
+
+# Tree
+set.seed(123)
+fit.rpart <- train(classe~., data=training, method="rpart", metric=metric, trControl=trControl)
+
+# Random Forest
+set.seed(123)
+fit.rf <- train(classe~., data=training, method="rf", metric=metric, trControl=trControl)
+
+# Boosting
+set.seed(123)
+fit.boosting <- train(classe~., data=training, method="gbm", metric=metric, 
+                      trControl=trControl, verbose=FALSE)
+
+# Model base prediction: LDA, NB
+set.seed(123)
+fit.lda <- train(classe~., data=training, method="lda", metric=metric, trControl=trControl)
+
+set.seed(123)
+fit.nb <- train(classe~., data=training, method="nb", metric=metric, trControl=trControl)
+```
+
+We Compare the models using the resamples caret function.
+
+```{r resamples, cache=TRUE}
+# Compare algorithms usi,ng the resamples caret function
+results <- resamples(list(rpart=fit.rpart,
+                          rf=fit.rf, boosting=fit.boosting,
+                          lda=fit.lda, nb=fit.nb))
+
+summary(results)
+
+dotplot(results)
+```
+
+  
+The random forest model seem to have the better results with an average accuracy above 99.2%.  
+
+## Check the RF model
+```{r rfmodel, cache=TRUE}
+print(fit.rf)
+plot(fit.rf$finalModel,main="RF - Error by number of trees")
+```
+
+The best model seems to use the mtry equal to 2. From the graph, the optimum number of tree seem to be 50 or 100. There is no gain with more trees.  
+
+## Tune the RF model
+We will try to tune the RF model using a grid search on the mtry parameters. We limit the ntree parameter to 100.  
+```{r tune, cache=TRUE}
+set.seed(123)
+trControl <- trainControl(method="repeatedcv", number=5, repeats=3, search="grid")
+tuneGrid <- expand.grid(.mtry=c(1:15))
+fit.gridsearch <- train(classe~., data=training, method="rf", 
+                       metric=metric, tuneGrid=tuneGrid, 
+                       trControl=trControl,
+                       ntree=100)
+print(fit.gridsearch)
+plot(fit.gridsearch)
+```
+
+The best value for mtry seems to be 7 for an accuracy of 99.4%.
+
+## Validation
+We use the validation dataset to predict and compare the results. We will compute the accuracy and the confusion matrix.  
+```{r predictvalidation, cache=TRUE}
+# predict the result on the validation dataset
+predict.rf <- predict(fit.gridsearch,newdata=validation)
+conf.rf <- confusionMatrix(validation$classe,predict.rf)
+```
+  
+We have an accuracy of **`r round(conf.rf$overall[1]*100,1)`**% on the validation dataset.  
+```{r confmatrixvalidation, cache=TRUE}
+conf.rf$table
+```
+
+
+# Compute the class for the quiz
+```{r quiz, cache=TRUE}
+predict.quiz <- predict(fit.gridsearch,newdata=pmlTesting)
+predict.quiz
+```
+
+
+
+# Appendix
+
+Summary:
+```{r summaryfct}
+summary(pmlTraining)
+```

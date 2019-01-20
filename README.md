@@ -25,3 +25,7 @@ This repo contains the assignments of the [Johns Hopkins University - Coursera](
 ### Course 7:  Regression Models
 
 - [Week 4 - Final Project - #1 - MPG difference between automatic and manual transmissions](07-Regression-Models)
+
+### Course 8:  Practical Machine Learning
+
+- [Week 4 - Final Project - #1 - Practical Machine Learning - Exercise classification](08-Practical-Machine-Learning)
