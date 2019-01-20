@@ -1,4 +1,4 @@
-# Coursera-Johns-Hopkins
+# Coursera-Johns-Hopkins - Practical Machine Learning
 
 This repo contains the project of the 8th course of the [Johns Hopkins University - Coursera](https://www.coursera.org/jhu) Data Science track.
 <br/>
@@ -9,5 +9,5 @@ This repo contains the project of the 8th course of the [Johns Hopkins Universit
 
 Sources:
 - [R markdown](PracticalML-1-pml.Rmd)
-- [html](PracticalML-1-pml.html)
+- [html](PracticalML-1-pml.html) source
 - [Figures](figure)
