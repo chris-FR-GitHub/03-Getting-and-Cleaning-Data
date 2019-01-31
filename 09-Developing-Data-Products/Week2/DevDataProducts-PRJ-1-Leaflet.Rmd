@@ -1,0 +1,83 @@
+---
+title: "Developing Data Products - PRJ 1 - Leaflet"
+author: "Chris-FR"
+date: "31 janvier 2019"
+output: 
+  html_document: 
+    keep_md: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# I need a coffee...
+
+In this test, we will use the `leaflet` package to locate all the **Starbucks** coffee in the US.    
+The original dataset can be found on the [Kaggle site](https://www.kaggle.com/starbucks/store-locations). 
+  
+
+> Starbucks is trademark of the **"Starbucks Coffee Company"**. All rights reserved.  
+> This page is for academic purpose only...
+  
+### CSV and images
+
+To work, the `all_starbucks_locations_in_the_world.csv` file needs to be located in the working folder.
+
+Also in the working folder, the script uses a Starbucks image `starbucks-marker-icon.png` (use in the popups):  
+
+ ![](starbucks-icon.png)...
+
+and a small custom marker `starbucks-marker-icon.png`:     
+
+ ![](starbucks-marker-icon.png)...
+
+### Load and build the dataset
+
+First we  
+- load the file,  
+- filter the dataset to keep the US stores only  
+- and build a basic HTML `label` for each store. 
+
+```{r load_the_dataset, message=FALSE, warning=FALSE}
+library(data.table)
+library(dplyr)
+library(leaflet)
+
+starbucks <- fread('all_starbucks_locations_in_the_world.csv')
+
+starbucks <- starbucks %>% 
+    filter(Country == 'US' & Brand=='Starbucks') %>%
+    mutate(Label=paste('<table border="0"><tr>',
+                       '<td valign="top"><img src="starbucks-icon.png"></td><td>',
+                       Name, '<br>',
+                       `Street Combined`, '<br>',
+                       City,'</td></tr></table>')) %>%
+    select(Longitude, Latitude, Label) %>%
+    rename(lng = Longitude, lat= Latitude, label= Label)
+
+```
+
+
+### Plot the data
+
+Now we can map the stores :  
+
+```{r display_the_map,  out.width = '100%'}
+
+# define the custom icon
+starbucksIcon <- makeIcon(
+  iconUrl = "starbucks-marker-icon.png",
+  iconWidth = 40, iconHeight = 67,
+  iconAnchorX = 20, iconAnchorY = 66
+)
+
+starbucks %>% 
+    leaflet() %>%
+    addTiles() %>%
+    addMarkers(lat= ~lat, lng = ~lng, popup = ~label, 
+               clusterOptions = markerClusterOptions(),
+               icon = starbucksIcon)
+```
+
+
