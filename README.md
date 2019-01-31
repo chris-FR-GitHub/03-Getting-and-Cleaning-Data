@@ -34,4 +34,3 @@ This repo contains the assignments of the [Johns Hopkins University - Coursera](
 
 - [Week 2 - #1 - Leaflet - I need a coffee](09-Developing-Data-Products/Week2)
 
-open the html file : [html](http://htmlpreview.github.io/?https://github.com/chris-FR-GitHub/Coursera-Johns-Hopkins/blob/master/09-Developing-Data-Products/Week2/DevDataProducts-PRJ-1-Leaflet.html)<<
