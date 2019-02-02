@@ -35,3 +35,7 @@ This repo contains the assignments of the [Johns Hopkins University - Coursera](
 - [Week 2 - #1 - Leaflet - I need a coffee](09-Developing-Data-Products/Week2)
 
 ====>  [HTML working version](https://chris-fr-github.github.io/Coursera-Johns-Hopkins/09-W2/DevDataProducts-PRJ-1-Leaflet.html)    (the file is 4Mb so slow to load)
+
+- [Week 3 - #1 - Plotly - CO2](09-Developing-Data-Products/Week3)
+
+====>  [HTML working version](https://chris-fr-github.github.io/Coursera-Johns-Hopkins/09-W3/DevDataProducts-PRJ-2-Plotly.html)    (the file is 4Mb so slow to load)
