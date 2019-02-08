@@ -39,3 +39,9 @@ This repo contains the assignments of the [Johns Hopkins University - Coursera](
 - [Week 3 - #1 - Plotly - CO2](09-Developing-Data-Products/Week3)
 
 ====>  [HTML working version](https://chris-fr-github.github.io/Coursera-Johns-Hopkins/09-W3/DevDataProducts-PRJ-2-Plotly.html)    (the file is 4Mb so slow to load)
+
+- [Week 4 - #1 - Shiny app - cars](09-Developing-Data-Products/Week4)
+
+====>  HTML working slides : [HTML working version](https://chris-fr-github.github.io/Coursera-Johns-Hopkins/09-W4/DevDataPrd-Week4-Slides.html)    
+
+====>  Shiny web app :  [shinyapps.io](https://chris-fr-github.shinyapps.io/DevDataPrd-Week4-ShinyWebApp/)    
