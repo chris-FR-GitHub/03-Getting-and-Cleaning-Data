@@ -1,0 +1,76 @@
+---
+title: "Speed and Stopping Distances of Cars"
+author: "Chris-FR"
+date: "7 février 2019"
+output: ioslides_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## Overview
+
+These slides were made using R Studio Presentation (ioslides). 
+
+The Web application can be found at the URL:
+https://chris-fr-github.shinyapps.io/DevDataPrd-Week4-ShinyWebApp/
+
+Source code is at GitHub for the application and presentation at the URL:
+https://github.com/chris-FR-GitHub/Coursera-Johns-Hopkins/tree/master/09-Developing-Data-Products/Week4
+
+## Data
+```{r lib, echo = FALSE, warning=FALSE,message=FALSE,comment=FALSE}
+library(stats)
+library(dplyr)
+library(ggplot2)
+library(plotly)
+```
+The data used for this application is `cars` from the `datasets` package.  
+This dataset contains `r dim(cars)[1]` records of `r dim(cars)[2]` features.  
+The data give the speed of cars and the distances taken to stop then (the data in from the 1920s).
+
+```{r cars, echo = TRUE}
+head(cars)
+```
+
+## Web application
+
+The web application calculates linear / polynomial regression of the 2 features.  
+
+The users can pick if he wants :  
+- speed~dist or dist~speed  
+- a linear regression or a polynomial regression (up to 5 degrees)  
+- a value (the preticted value will be displayed).
+
+The plot uses **plotly**.  
+The numeric input field is dynamic and the max value depends of the formula.
+
+## Exemple
+Formula : dist~speed - 2 degree polynomial, value = 15
+```{r plot, echo = FALSE, fig.height=3.5}
+degree<-2
+x<-cars$speed
+y<-cars$dist
+xlabel<- 'Speed'
+ylabel<- 'Distance'
+formula <- y ~ poly(x, degree, raw = TRUE)
+p <- ggplot(cars, aes(x, y)) 
+p <- p + 
+    geom_point(alpha=0.2, 
+                    fill="blue", colour="black", 
+                    size=2) +
+    labs(x = xlabel, y= ylabel)
+p <- p + geom_smooth(method = "lm", 
+                     se = FALSE, 
+                     formula = formula, 
+                     colour = "red")
+ggplotly(p)
+```
+
+```{r predictedvalue, echo = FALSE}
+lm.fit <- lm(formula = formula)
+val <- predict(lm.fit, 
+        newdata = data.frame(x = 15), se.fit = FALSE)
+```
+Predicted value for 15 : `r round(val,1)`
