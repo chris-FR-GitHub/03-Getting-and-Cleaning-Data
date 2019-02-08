@@ -1,11 +1,11 @@
 # Coursera-Johns-Hopkins
 
-This repo contains the Developing Data Products week 2 project.
+This repo contains the Developing Data Products week 4 project.
 <br/>
 
 **Slides**  
 - RMD : [DevDataPrd-Week4-Slides.Rmd](DevDataPrd-Week4-Slides.Rmd)  
-- html [source file] (DevDataPrd-Week4-Slides.html)  
+- html [source file](DevDataPrd-Week4-Slides.html)  
 
 **Shiny App**  
 - [server.R](server.R)  
