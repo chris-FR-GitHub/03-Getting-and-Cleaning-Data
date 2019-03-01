@@ -45,3 +45,11 @@ This repo contains the assignments of the [Johns Hopkins University - Coursera](
 ====>  HTML working slides : [HTML working version](https://chris-fr-github.github.io/Coursera-Johns-Hopkins/09-W4/DevDataPrd-Week4-Slides.html)    
 
 ====>  Shiny web app :  [shinyapps.io](https://chris-fr-github.shinyapps.io/DevDataPrd-Week4-ShinyWebApp/)    
+
+### Course 10:  Capstone project
+
+- [Week 2 - Milestone report](10-Capstone-Project/Milestone)
+
+====>  [HTML working version - CapstoneProject-MilestoneReport.html](https://chris-fr-github.github.io/Coursera-Johns-Hopkins/10-W2/CapstoneProject-MilestoneReport.html)
+
+

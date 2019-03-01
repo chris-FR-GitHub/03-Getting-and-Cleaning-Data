@@ -1,0 +1,475 @@
+---
+title: "Coursera Capstone Project: Milestone Report"
+author: "Chris-FR"
+date: "28 fevrier 2019"
+output: 
+  html_document: 
+    keep_md: yes
+geometry: left=2cm,right=2cm,top=1cm,bottom=2cm
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set( fig.path = "figure/")
+knitr::opts_chunk$set( fig.show = "hold")
+```
+
+## Introduction
+
+The goal of Coursera Capstone project is to build a predictive text completion model. This milestone report contains a basic exploratory analysis on the SwifKey datasets and feedbacks on my plans for creating a predictive algorithm and Shiny app.  
+In this short document, we will :  
+1. Download the original datasets and load them in memory,  
+2. Generate basic summary statistics about these files,  
+3. Use the `tm` package to clean the data and explore the relationship between words,    
+4. Try to plan the next steps to complete the project.  
+
+The source code can be found in the following GitHub repository: [chris-FR-GitHub/Coursera-Johns-Hopkins](https://github.com/chris-FR-GitHub/Coursera-Johns-Hopkins/tree/master/10-Capstone-Project)
+
+## Loading the data files
+
+All the original data will be stored under the **data** folder.  
+The script load the **Coursera-SwiftKey.zip** file if it is not already in the data folder. It will extract only the en-US files in the same folder if they have not been already extracted.  
+We will work the the 3 following files:  
+- en_US.blogs.txt,  
+- en_US.news.txt,  
+- en_US.twitter.txt.  
+
+```{r load, echo=FALSE, warning=FALSE,message=FALSE,cache=TRUE}
+# Load the packages
+library(tidyverse, quietly=TRUE)
+library(stringi, quietly=TRUE)
+library(NLP, quietly=TRUE)
+library(tm, quietly=TRUE)
+library(ngram, quietly=TRUE)
+library(ngramrr, quietly=TRUE)
+library(slam, quietly=TRUE)
+library(gridExtra, quietly=TRUE)
+
+################################################################################
+# Download the original files
+################################################################################
+
+# create the data folder
+folder_data <- './data'
+folder_datasample <- './datasample'
+folder_files <- './data/final/en_US/'
+
+if(!dir.exists(folder_data)) dir.create(folder_data)
+if(!dir.exists(folder_datasample)) dir.create(folder_datasample)
+
+# original zip file
+url_zip <- 'https://d396qusza40orc.cloudfront.net/dsscapstone/dataset/Coursera-SwiftKey.zip'
+file_zip <- file.path(folder_data, 'Coursera-SwiftKey.zip')
+
+# load the zip file if necessary
+if(!file.exists(file_zip)){
+    download.file(url=url_zip, 
+                  destfile = file_zip, 
+                  mode="wb", quiet = T)
+}
+
+file_names<- c('en_US.blogs.txt','en_US.news.txt','en_US.twitter.txt')
+file_fullnames<- paste(folder_data,file_names, sep='/')
+file_zipfullnames <- paste('final/en_US',file_names, sep='/')
+
+if(!(file.exists(file_fullnames[1]) & file.exists(file_fullnames[2]) & file.exists(file_fullnames[3]))){
+    unzip(file_zip, files = file_zipfullnames, 
+          overwrite = TRUE,
+          junkpaths = TRUE, 
+          exdir = folder_data, 
+          unzip = "internal",
+          setTimes = FALSE)
+}
+
+rm(file_fullnames, file_zipfullnames, url_zip, file_zip, folder_files)
+```
+
+## Basic summary
+
+Even if the 3 files have around the same size on disk, they do not contains the same number of lines. the Twitter file has the more recards as tweets have limited length.  
+
+```{r stats, echo=FALSE, warning=FALSE,message=FALSE,cache=TRUE}
+
+################################################################################
+# Basic stats
+################################################################################
+
+# function to read the file
+readTextFile <- function(shortname){
+    
+    # read the file and return it
+    readLines(paste0(folder_data,"/en_US.",shortname,".txt"),
+              encoding="UTF-8",
+              skipNul=TRUE)
+}
+
+short_names<- c('blogs','news','twitter')
+
+# LOAD the full text
+txt_blogs <- readTextFile('blogs')
+txt_news <- readTextFile('news')
+txt_twitter <- readTextFile('twitter')
+
+# create en empty dataframe
+stats_results <- data_frame(File=character(0),  
+                           'Size on disk (Mb)' = numeric(0),
+                           'Size in memory disk (Mb)' = numeric(0),
+                           'Char Count' = numeric(0),
+                           'Word Count' = numeric(0),
+                           'Line Count' = numeric(0),
+                           'Avg Line Length' = numeric(0),
+                           'Max Line Length' = numeric(0)
+                           )
+
+# basic stats function
+addStats <- function(shortname, label){
+    
+    # Original file size on disk
+    filesize <- file.size(paste0(folder_data,"/en_US.",shortname,".txt"))/1024/1024
+    # object file
+    textobj <- get(paste0('txt_', shortname))
+    objsize <- as.numeric(object.size(textobj))/1024/1024
+    # len / count
+    char_count <- sum(nchar(textobj))
+    word_count <- sum(stri_count_regex(textobj, pattern="\\w+"))
+    line_count <- length(textobj)
+    
+    lght <- str_length(textobj)
+    line_length_mean <- mean(lght)
+    line_length_max <- max(lght)
+    
+    # add the result
+    stats_results[nrow(stats_results) + 1,] = list(File=label, 
+                 'Size on disk (Mb)' = round(filesize,1),
+                 'Size in memory disk (Mb)' = round(objsize,1),
+                 'Char Count' = char_count,
+                 'Word Count' = word_count,
+                 'Line Count' = line_count,
+                 'Avg Line Length' = round(line_length_mean,1),
+                 'Max Line Length' = line_length_max)
+    stats_results
+}
+
+stats_results <- addStats('blogs', 'blogs')
+stats_results <- addStats('news', 'news')
+stats_results <- addStats('twitter', 'twitter')
+
+stats_results %>% knitr::kable()
+
+```
+
+
+
+## Build the document corpus (using TM) and word frequency data tables
+
+We will use the `tm` package (text mining) to build our document corpus.  
+For this first analysis (1 word), we will keep the 3 documents separated and we will also use the full documents (no sample).  
+
+We will clean the text by removing :  
+- invalid characters,  
+- numbers,  
+- punctuation,  
+- extra white spaces.  
+We will also convert all words to lower case.  
+
+We do not remove the "stop words". I do not know yet how to handle the stop words to build the predictive model. As we want to predict the next word, we may want to predict stop words.  
+For this analysis, I will just remove them (parameter option) when building the word frequency data tables.  
+We also did not remove the curses words.
+
+```{r tm, echo=FALSE, warning=FALSE,message=FALSE,cache=TRUE}
+
+################################################################################
+# TM
+################################################################################
+
+
+cleanCorpus <- function(corpus){
+    
+    # txt_corpus <- Corpus(VectorSource(text)) 
+    
+    # avoid error with invalid char - ex: invalid input 'Im doing ití xxx' in 'utf8towcs' 
+    # https://stackoverflow.com/questions/9637278/r-tm-package-invalid-input-in-utf8towcs
+    #Create the toSpace content transformer
+    toSpace <- content_transformer(function(x, pattern) {return (gsub(pattern," ",x))})
+    # Apply it for substituting the regular expression given in one of the former answers by " "
+    corpus<- tm_map(corpus,toSpace,"[^[:graph:]]")
+    
+    corpus <- tm_map(corpus, content_transformer(removeNumbers))
+    corpus <- tm_map(corpus, content_transformer(removePunctuation))
+    corpus <- tm_map(corpus, content_transformer(stripWhitespace))
+    corpus <- tm_map(corpus, content_transformer(tolower))
+    corpus
+}
+
+# create 3 corpus
+corpus_blogs <- Corpus(VectorSource(txt_blogs))
+corpus_blogs <- cleanCorpus(corpus_blogs)
+
+corpus_news <- Corpus(VectorSource(txt_news))
+corpus_news <- cleanCorpus(corpus_news)
+
+corpus_twitter <- Corpus(VectorSource(txt_twitter))
+corpus_twitter <- cleanCorpus(corpus_twitter)
+
+rm(txt_blogs, txt_news, txt_twitter)
+
+```
+
+```{r freqtable, echo=FALSE, warning=FALSE,message=FALSE,cache=TRUE}
+computeWordfreq = function(corpus, removeStopWords = FALSE){ 
+    ## Create a term-document matrix and compute the word frequencies. 
+    tdm <- TermDocumentMatrix(corpus, control = list(stopwords = removeStopWords))
+    tdm <- removeSparseTerms(tdm, 0.9999999)
+    freq <- row_sums(tdm, na.rm = T)
+    ## Sort the word frequency and build a dataframe
+    freq <- sort(freq, decreasing = TRUE)
+    word.freq <- data.frame(word = factor(names(freq), levels = names(freq)),
+                            freq = freq)
+    word.freq['CumFreq'] <- cumsum(word.freq['freq'])/sum(word.freq$freq)
+    word.freq 
+}
+
+# word freq with Stop words
+wf_blogs = computeWordfreq(corpus_blogs)
+wf_twitter = computeWordfreq(corpus_twitter)
+wf_news = computeWordfreq(corpus_news)
+# word freq with Stop words
+wf_blogs_nsw = computeWordfreq(corpus_blogs, TRUE)
+wf_twitter_nsw = computeWordfreq(corpus_twitter, TRUE)
+wf_news_nsw = computeWordfreq(corpus_news, TRUE)
+```
+
+### Blogs
+
+```{r plotblogs, echo=FALSE, warning=FALSE,message=FALSE,cache=TRUE, fig.align='center', fig.height=5, fig.width=10}
+# simple bar plot function
+plotFreq <- function(wf, title='Most common words'){ 
+    ggplot(wf[1:40,], aes(reorder(word, freq), freq)) +
+        geom_bar(stat = 'identity',colour="darkblue", fill="#86A8D1") +
+        coord_flip() +
+        labs(title = title,
+             x = "Word", y = 'Frequency') +
+        theme(axis.text.x = element_text(angle = 45, hjust = 1))
+} 
+
+# simple cumulative bar plot function
+plotCumFreq <- function(wf, title='Cumulative'){ 
+    ggplot(wf[1:50,], aes(word, CumFreq)) +
+        geom_bar(stat = 'identity',colour="darkblue", fill="#86A8D1") +
+        labs(title = title,
+             x = "Word", y = 'Cumulative Frequency') +
+        theme(axis.text.x = element_text(angle = 45, hjust = 1))
+} 
+
+p1<- plotFreq(wf_blogs)
+p2<- plotFreq(wf_blogs_nsw, 'No Stop Words')
+grid.arrange(p1, p2, ncol=2)
+```
+
+We can see that "Stop words"" are the most frequently used word. They represent **`r 100 - length(intersect(wf_blogs$word[1:100],wf_blogs_nsw$word[1:100]))`%** of the first 100 words.  
+
+```{r cumplotblogs, echo=FALSE, warning=FALSE,message=FALSE,cache=TRUE, fig.align='center', fig.height=5, fig.width=10}
+
+plotCumFreq(wf_blogs)
+
+```
+
+On `r dim(wf_blogs)[1]` words (including stop words):  
+- `r sum(wf_blogs$CumFreq<0.25)` words represents 25% of the words,  
+- `r sum(wf_blogs$CumFreq<0.40)` words represents 40% of the words,  
+- `r sum(wf_blogs$CumFreq<0.50)` words represents 50% of the words,  
+- `r sum(wf_blogs$CumFreq<0.60)` words represents 60% of the words,  
+- `r sum(wf_blogs$CumFreq<0.80)` words represents 80% of the words,  
+- `r sum(wf_blogs$CumFreq<0.95)` words represents 95% of the words,  
+- `r sum(wf_blogs$CumFreq<0.99)` words represents 99% of the words.
+
+Even if a few words represent 50% of the text, we have nearly 90000 words for the last 20% (the frequency drops quicly).
+
+### Twitter
+
+```{r plottwitter, echo=FALSE, warning=FALSE,message=FALSE,cache=TRUE, fig.align='center', fig.height=5, fig.width=10}
+p1<- plotFreq(wf_twitter)
+p2<- plotFreq(wf_twitter_nsw, 'No Stop Words')
+grid.arrange(p1, p2, ncol=2)
+```
+
+Stop words represent **`r 100 - length(intersect(wf_twitter$word[1:100],wf_twitter_nsw$word[1:100]))`%** of the first 100 words.
+
+On `r dim(wf_twitter)[1]` words (including stop words):  
+- `r sum(wf_twitter$CumFreq<0.25)` words represents 25% of the words,  
+- `r sum(wf_twitter$CumFreq<0.40)` words represents 40% of the words,  
+- `r sum(wf_twitter$CumFreq<0.50)` words represents 50% of the words,  
+- `r sum(wf_twitter$CumFreq<0.60)` words represents 60% of the words,  
+- `r sum(wf_twitter$CumFreq<0.80)` words represents 80% of the words,  
+- `r sum(wf_twitter$CumFreq<0.95)` words represents 95% of the words,  
+- `r sum(wf_twitter$CumFreq<0.99)` words represents 99% of the words.
+
+We need less distinct words to arrive at 50% of all the words. But there are more different words so a lot of words are not really used... There seems to have a lots of typos (missing space, invalid word, ...)
+
+We may need to change our cleanup rules to remove all the **#name** (ex: #IlovethisMovie).
+
+
+### News
+
+```{r plotnews, echo=FALSE, warning=FALSE,message=FALSE,cache=TRUE, fig.align='center', fig.height=5, fig.width=10}
+p1<- plotFreq(wf_news)
+p2<- plotFreq(wf_news_nsw, 'No Stop Words')
+grid.arrange(p1, p2, ncol=2)
+```
+
+Stop words represent **`r 100 - length(intersect(wf_news$word[1:100],wf_news_nsw$word[1:100]))`%** of the first 100 words.
+
+On `r dim(wf_news)[1]` words (including stop words):  
+- `r sum(wf_news$CumFreq<0.25)` words represents 25% of the words,  
+- `r sum(wf_news$CumFreq<0.40)` words represents 40% of the words,  
+- `r sum(wf_news$CumFreq<0.50)` words represents 50% of the words,  
+- `r sum(wf_news$CumFreq<0.60)` words represents 60% of the words,  
+- `r sum(wf_news$CumFreq<0.80)` words represents 80% of the words,  
+- `r sum(wf_news$CumFreq<0.95)` words represents 95% of the words,  
+- `r sum(wf_news$CumFreq<0.99)` words represents 99% of the words.
+
+### Similarity between top words
+
+We can try to compute the percentage of similar words in the TOP XX words of each document. As we did not stem the word nor remove the plural, ... this table check only exact matches.  
+
+```{r computeintersect, echo=FALSE, warning=FALSE,message=FALSE,cache=TRUE}
+computeintersect <- function(x, y, nbrec){
+    round(length(intersect(x$word[1:nbrec],y$word[1:nbrec]))/nbrec*100, 1)
+}
+
+# computeintersect(wf_twitter, wf_blogs, 500)
+```
+
+| --- | Blogs | Twitter | News | 
+| --- | --- | --- | --- | 
+| **TOP 100 words** | 
+| + **Blogs** | - |  `r computeintersect(wf_blogs_nsw, wf_twitter_nsw, 100)`% | `r computeintersect(wf_blogs_nsw, wf_news_nsw, 100)`% | 
+| + **Twitter** | `r computeintersect(wf_blogs_nsw, wf_twitter_nsw, 100)`% | - | `r computeintersect(wf_twitter_nsw, wf_news_nsw, 100)`% | 
+| + **News** | `r computeintersect(wf_blogs_nsw, wf_news_nsw, 100)`% | `r computeintersect(wf_twitter_nsw, wf_news_nsw, 100)`% | - | 
+| **TOP 250 words** | 
+| + **Blogs** | - |  `r computeintersect(wf_blogs_nsw, wf_twitter_nsw, 250)`% | `r computeintersect(wf_blogs_nsw, wf_news_nsw, 250)`% | 
+| + **Twitter** | `r computeintersect(wf_blogs_nsw, wf_twitter_nsw, 250)`% | - | `r computeintersect(wf_twitter_nsw, wf_news_nsw, 250)`% | 
+| + **News** | `r computeintersect(wf_blogs_nsw, wf_news_nsw, 250)`% | `r computeintersect(wf_twitter_nsw, wf_news_nsw, 250)`% | - | 
+| **TOP 500 words** | 
+| + **Blogs** | - |  `r computeintersect(wf_blogs_nsw, wf_twitter_nsw, 500)`% | `r computeintersect(wf_blogs_nsw, wf_news_nsw, 500)`% | 
+| + **Twitter** | `r computeintersect(wf_blogs_nsw, wf_twitter_nsw, 500)`% | - | `r computeintersect(wf_twitter_nsw, wf_news_nsw, 500)`% | 
+| + **News** | `r computeintersect(wf_blogs_nsw, wf_news_nsw, 500)`% | `r computeintersect(wf_twitter_nsw, wf_news_nsw, 500)`% | - | 
+
+The similarity between the 3 types of text is around to 50-60%.  
+If we don't exclude the stop words, except between News and Twitter (where the average is only around 60%), the similarity is above 70%. We may use a single model.  
+
+```{r delcorpus, echo=FALSE, warning=FALSE,message=FALSE,cache=TRUE}
+# delte the corpus objects
+rm(corpus_blogs,corpus_twitter,corpus_news)
+```
+
+```{r plotword2, echo=FALSE, warning=FALSE,message=FALSE,cache=TRUE, fig.align='center', fig.height=5, fig.width=10}
+library("RColorBrewer")
+library("wordcloud")
+
+plotWordCloud <- function(df, max.words=150){
+    set.seed(12321)
+    wordcloud(words = df$word, freq = df$freq, min.freq = 1,
+              max.words=150, random.order=FALSE, rot.per=0.35, 
+               colors=brewer.pal(8, "Dark2"))
+}
+
+```
+### Twitter only words
+Twitter texts have some short words, acronyms, abbreviations, ... that are not in the other texts.
+
+```{r plotword1, echo=FALSE, warning=FALSE,message=FALSE,cache=TRUE, fig.align='center', fig.height=5, fig.width=7}
+twt <- setdiff(wf_twitter_nsw$word[1:1000],wf_news_nsw$word[1:1000])
+twt <- setdiff(twt,wf_blogs_nsw$word[1:1000])
+
+plotWordCloud(wf_twitter_nsw[wf_twitter_nsw$word %in% twt,], 100)
+```
+
+## N-Grams
+
+As we need to predict the next word, we need to check groups of words (n-grams). To limit the processing time and memory (use of VCorpus), we will sample the data instead of using the full files.  
+We will store these sample in the **datasample** folder.   
+For this report, we just pick 5000 lines samples. We may ajust this value (or work with percentage) depending of the results.  
+
+```{r samplefile, echo=FALSE, warning=FALSE,message=FALSE,cache=TRUE}
+# samples
+sampleData <- function(shortname, size=5000){
+    
+    # read the file and return it
+    data <- readLines(paste0(folder_data,"/en_US.",shortname,".txt"),
+              encoding="UTF-8",
+              skipNul=TRUE)
+    
+    sampledata <- sample(data, size = size, replace = TRUE)
+    writeLines(sampledata, paste0(folder_datasample,"/en_US.",shortname,".sample.txt"))
+}
+
+# Sample ALL data files
+set.seed(12321)
+sampleData('blogs')
+sampleData('news')
+sampleData('twitter')
+```
+
+We build a "Volatile" corpus (it is stored in memory and would be destroyed when the R object containing it is destroyed) from these files and use the same cleaning function.
+
+```{r buildvcorpus, echo=TRUE, warning=FALSE,message=FALSE,cache=TRUE}
+vcorpus_sample <- VCorpus(
+    DirSource(folder_datasample),
+    readerControl = list(reader = readPlain, language  = "en")
+    
+)
+# clean the corpus
+vcorpus_sample <- cleanCorpus(vcorpus_sample)
+# inspect(vcorpus_sample)
+```
+
+From this VCorpus, we can build bi-grams and tri-grams.
+```{r bigram, echo=TRUE, warning=FALSE,message=FALSE,cache=TRUE}
+n<- 2
+tdm.bigram <- tdm2(vcorpus_sample, ngmin = n, ngmax = n)
+n<- 3
+tdm.trigram <- tdm2(vcorpus_sample, ngmin = n, ngmax = n)
+```
+```{r iiii, echo=TRUE, warning=FALSE,message=FALSE,cache=TRUE}
+inspect(tdm.trigram)
+```
+
+```{r freqbigram, echo=FALSE, warning=FALSE,message=FALSE,cache=TRUE}
+getFreqDF <- function(tdm){
+    freq = sort(rowSums(as.matrix(tdm)),decreasing = TRUE)
+    df <- data.frame(word=names(freq), freq=freq)
+    df['CumFreq'] <- cumsum(df['freq'])/sum(df$freq)
+    df 
+}
+
+tdm.bigram.freq = getFreqDF(tdm.bigram )
+tdm.trigram.freq = getFreqDF(tdm.trigram)
+```
+
+```{r plotbigram, echo=FALSE, warning=FALSE,message=FALSE,cache=TRUE, fig.align='center', fig.height=5, fig.width=10}
+p1<- plotFreq(tdm.bigram.freq, 'bigrams')
+p2<- plotFreq(tdm.trigram.freq, 'trigrams')
+grid.arrange(p1, p2, ncol=2)
+```
+
+
+
+```{r plotword3, echo=FALSE, warning=FALSE,message=FALSE,cache=TRUE, fig.align='center', fig.height=5, fig.width=10}
+par(mfrow=c(1,2))
+plotWordCloud(tdm.bigram.freq, 100)
+plotWordCloud(tdm.trigram.freq, 100)
+```
+
+# Plans / future steps
+
+I plan to use the frequency matrices to get the next word prediction. I may start to search the tri-grams, then the bi-grams, then most populat word. If I keep the stop words, I may try to compute 2 models (1 with to propose stops words) , one without to propose a word depending of the real word before or I may use 4-grams.
+
+I still need to determine:  
+- the optimal size of the uni, bi and tri grams frequency matrices,  
+- what is the sample size needed to cover a large majority of word sequence but keeping the size of the objects and the prediction speed low,  
+- if i should stem the words to build the frequency matrices, predict a stem and complete it.  
+
+For the GUI, i plan to create a simple textbox with under a list of dynamic buttons with the proposed words.
+
+
